@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="dark">
+  <title>Manifest Studio</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23111112'/%3E%3Cpath d='M8 22V10l8 8 8-8v12' fill='none' stroke='%23e8c46b' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap">
+  <style>
+    :root { --gold: #e8c46b; --line: #262628; --line-2: #323236; --text: #ececee; --muted: #95959d; --danger: #ff7b86; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background-color: #1a1a1c;
+      background-image: radial-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px);
+      background-size: 22px 22px;
+      color: var(--text);
+      font: 14px/1.45 "Instrument Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body.is-checking form { visibility: hidden; }
+    form {
+      width: min(360px, 100%);
+      padding: 28px;
+      border-radius: 14px;
+      background: #111112;
+      border: 1px solid var(--line);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .45);
+      display: grid;
+      gap: 16px;
+    }
+    .brand { font: italic 34px/1 "Instrument Serif", Georgia, serif; letter-spacing: -.01em; }
+    .lede { margin: -8px 0 4px; color: var(--muted); }
+    label { display: grid; gap: 6px; }
+    label > span { font-size: 12.5px; color: var(--muted); }
+    input[type=text], input[type=password] {
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line-2);
+      background: #19191b;
+      color: var(--text);
+      font: 15px "Instrument Sans", sans-serif;
+    }
+    input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(232, 196, 107, .16); }
+    .stay { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--text); cursor: pointer; }
+    .stay input { accent-color: var(--gold); width: 16px; height: 16px; margin: 0; }
+    button {
+      height: 42px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--gold);
+      color: #1d1708;
+      font: 600 15px "Instrument Sans", sans-serif;
+      cursor: pointer;
+    }
+    button:hover { background: #f1d283; }
+    button:disabled { opacity: .6; cursor: progress; }
+    button:focus-visible, .stay input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .error { min-height: 20px; margin: -6px 0 0; color: var(--danger); font-size: 13.5px; }
+    form.is-wrong { animation: shake .3s; }
+    @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    @media (prefers-reduced-motion: reduce) { form.is-wrong { animation: none; } }
+  </style>
+</head>
+<body class="is-checking">
+  <form id="signin" autocomplete="on" novalidate>
+    <div class="brand">Manifest</div>
+    <p class="lede">Sign in to open the studio.</p>
+    <label><span>Username</span><input type="text" name="username" autocomplete="username" autocapitalize="off" spellcheck="false" required></label>
+    <label><span>Password</span><input type="password" name="password" autocomplete="current-password" required></label>
+    <label class="stay"><input type="checkbox" name="stay" checked>Stay signed in on this device</label>
+    <button type="submit">Sign in</button>
+    <p class="error" role="alert" aria-live="polite"></p>
+  </form>
+
+  <script>
+  (function () {
+    var P = __PAYLOAD__;
+    var KEY = 'mm-auth';
+    var subtle = window.crypto && window.crypto.subtle;
+    var form = document.getElementById('signin');
+    var err = form.querySelector('.error');
+    var btn = form.querySelector('button');
+
+    function bytes(b64) { var s = atob(b64), u = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
+    function b64(buf) { var u = new Uint8Array(buf), s = ''; for (var i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s); }
+    function store(kind) { try { return window[kind]; } catch (e) { return null; } }
+
+    function decrypt(raw) {
+      return subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt'])
+        .then(function (k) { return subtle.decrypt({ name: 'AES-GCM', iv: bytes(P.iv) }, k, bytes(P.data)); })
+        .then(function (pt) { return new TextDecoder().decode(pt); });
+    }
+
+    function open(html) {
+      document.open();
+      document.write(html);
+      document.close();
+    }
+
+    function derive(user, pass) {
+      return subtle.importKey('raw', new TextEncoder().encode(user + '\n' + pass), 'PBKDF2', false, ['deriveBits'])
+        .then(function (base) { return subtle.deriveBits({ name: 'PBKDF2', salt: bytes(P.salt), iterations: P.iterations, hash: 'SHA-256' }, base, 256); });
+    }
+
+    function ready() {
+      document.body.classList.remove('is-checking');
+      form.username.focus();
+    }
+
+    if (!subtle) {
+      err.textContent = 'This page needs a secure (https) connection and a modern browser.';
+      ready();
+      btn.disabled = true;
+      return;
+    }
+
+    // Reuse a saved session if it was made for this version of the site.
+    var saved = null;
+    ['localStorage', 'sessionStorage'].forEach(function (k) {
+      var s = store(k);
+      if (!saved && s) { try { var v = JSON.parse(s.getItem(KEY) || 'null'); if (v && v.salt === P.salt) saved = v; } catch (e) {} }
+    });
+    if (saved) {
+      decrypt(bytes(saved.key)).then(open, function () {
+        ['localStorage', 'sessionStorage'].forEach(function (k) { var s = store(k); if (s) s.removeItem(KEY); });
+        ready();
+      });
+    } else {
+      ready();
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var user = form.username.value.trim();
+      var pass = form.password.value;
+      if (!user || !pass) { err.textContent = 'Enter your username and password.'; return; }
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+      err.textContent = '';
+      var raw;
+      derive(user, pass)
+        .then(function (r) { raw = r; return decrypt(r); })
+        .then(function (html) {
+          var s = store(form.stay.checked ? 'localStorage' : 'sessionStorage');
+          if (s) { try { s.setItem(KEY, JSON.stringify({ salt: P.salt, key: b64(raw) })); } catch (e2) {} }
+          open(html);
+        }, function () {
+          btn.disabled = false;
+          btn.textContent = 'Sign in';
+          err.textContent = 'Wrong username or password.';
+          form.classList.remove('is-wrong');
+          void form.offsetWidth;
+          form.classList.add('is-wrong');
+          form.password.select();
+        });
+    });
+  })();
+  </script>
+</body>
+</html>

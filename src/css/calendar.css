@@ -1,0 +1,124 @@
+/* PNL Calendar replica (1018 x 800). Positions measured from the reference screenshot. */
+.axcal {
+  --green: 111 194 159;
+  --yellow: 222 210 148;
+  --red: 227 104 127;
+  --bg: #19191b;
+  position: relative;
+  width: 1018px;
+  height: 800px;
+  background: var(--bg);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .035);
+  color: #d4d4d6;
+  font-family: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "tnum" 0;
+  overflow: hidden;
+  user-select: none;
+}
+.axcal > * { position: absolute; }
+.axcal button { background: none; border: 0; padding: 0; margin: 0; color: inherit; cursor: pointer; font: inherit; }
+
+.axcal-title { left: 21px; top: 15px; font-size: 17px; line-height: 20px; font-weight: 600; color: #dcdcde; }
+.axcal-btn { display: flex; align-items: center; justify-content: center; }
+.axcal .axcal-prev { left: 599px; top: 18px; width: 14px; height: 14px; color: #a3a3a6; }
+.axcal .axcal-next { left: 752px; top: 18px; width: 14px; height: 14px; color: #a3a3a6; }
+.axcal-month { left: 642px; top: 14px; font-size: 17px; line-height: 20px; font-weight: 600; color: #d2d2d4; white-space: nowrap; }
+.axcal .axcal-cur { left: 800px; top: 15px; height: 20px; gap: 5px; color: #cfcfd1; font-size: 14px; font-weight: 600; letter-spacing: .04em; }
+.axcal-cur svg { margin-top: -1px; }
+.axcal .axcal-share { left: 880px; top: 17px; width: 16px; height: 16px; color: rgb(var(--green)); }
+.axcal .axcal-close { left: 974px; top: 19px; width: 12px; height: 12px; color: #d0d0d2; }
+.axcal button:hover { opacity: .8; }
+
+.axcal-total { left: 24px; top: 57px; font-size: 15px; line-height: 19px; font-weight: 600; color: rgb(var(--green)); white-space: nowrap; }
+.axcal-total.is-neg { color: rgb(var(--red)); }
+.axcal-bar {
+  left: 29px; top: 84px; width: 958px; height: 3px;
+  display: flex; gap: 0; border-radius: 2px; overflow: hidden;
+  background: #2a2b2c;
+}
+.axcal-bar i { display: block; height: 100%; flex-basis: 0; }
+.axcal-bar .pos { background: rgb(var(--green)); }
+.axcal-bar .neg { background: rgb(var(--red)); }
+.axcal-count { top: 98px; font-size: 14px; line-height: 16px; font-weight: 500; white-space: nowrap; }
+.axcal-count.pos { left: 31px; color: rgb(var(--green) / .9); }
+.axcal-count.neg { right: 31px; color: rgb(var(--red) / .9); }
+
+.axcal-week { left: 21px; top: 130px; width: 974px; display: grid; grid-template-columns: repeat(7, 134px); column-gap: 6px; }
+.axcal-week span { text-align: center; font-size: 13px; line-height: 14px; font-weight: 500; color: #5f5f62; }
+.axcal-rule { left: 0; right: 0; top: 163px; height: 1px; background: #212223; box-shadow: 0 1px 0 #151617; }
+
+.axcal-grid {
+  left: 21px; top: 185px;
+  display: grid;
+  grid-template-columns: repeat(7, 134px);
+  grid-auto-rows: 88px;
+  gap: 6px;
+}
+.axcal .cell {
+  position: relative;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  --tint: var(--green);
+  background: rgb(var(--tint) / var(--a, 0));
+  box-shadow: inset 0 0 0 1px rgb(var(--tint) / calc(var(--a, 0) * .55));
+  color: rgb(var(--tint));
+}
+.axcal .cell.t-green { --tint: var(--green); }
+.axcal .cell.t-yellow { --tint: var(--yellow); }
+.axcal .cell.t-red { --tint: var(--red); }
+.axcal .cell.t-zero { --tint: 160 160 165; }
+.axcal .dnum {
+  position: absolute; left: 5px; top: 3px;
+  font-size: 12px; line-height: 14px; font-weight: 500;
+  color: rgb(var(--tint) / .5);
+}
+.axcal .val { font-size: 17px; line-height: 20px; font-weight: 600; white-space: nowrap; letter-spacing: -.005em; }
+.axcal .sol { width: .82em; height: .66em; margin: 0 .12em 0 .06em; vertical-align: -.02em; }
+
+/* days without a value: invisible like the original, revealed while editing */
+.axcal .cell.t-empty { --tint: 150 150 155; background: transparent; box-shadow: none; }
+.axcal .cell.t-empty .dnum { opacity: 0; }
+.axcal .cell.t-empty.show-empty { background: rgb(255 255 255 / .025); }
+.axcal .cell.t-empty.show-empty .dnum { opacity: 1; color: #4f4f53; }
+.mode-edit .axcal .cell[data-key] { cursor: pointer; }
+.mode-edit .axcal .cell.t-empty:hover { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
+.mode-edit .axcal .cell.t-empty:hover .dnum { opacity: 1; color: #6a6a6e; }
+.mode-edit .axcal .cell.t-empty:hover .val::before { content: "+"; font-weight: 400; font-size: 20px; color: #6a6a6e; }
+.mode-edit .axcal .cell:not(.t-empty):hover { box-shadow: inset 0 0 0 1px rgb(var(--tint) / .35); }
+.axcal .cell.is-editing { box-shadow: inset 0 0 0 1.5px #e8c46b !important; }
+.axcal .cell-input {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: #f2f2f4;
+  text-align: center;
+  font: 600 17px/20px "Geist", "Inter", sans-serif;
+  caret-color: #e8c46b;
+  outline: none;
+  padding: 0 8px;
+}
+.axcal .cell-input.is-invalid { color: #ff7b86; animation: shake .3s; }
+.is-capturing .axcal .cell { box-shadow: none !important; }
+.is-capturing .axcal .cell.t-empty:not(.show-empty) .dnum { opacity: 0 !important; }
+.is-capturing .axcal .cell.t-empty .val::before { content: none !important; }
+
+.axcal-foot { left: 23px; top: 764px; display: flex; gap: 17px; }
+.axcal-pill {
+  height: 27px;
+  padding: 0 11px;
+  line-height: 27px;
+  border-radius: 6px;
+  background: #1c1d1e;
+  box-shadow: inset 0 0 0 1px #28292a;
+  font-size: 15px;
+  color: #626266;
+  white-space: nowrap;
+}
+.axcal-pill b { font-weight: 500; color: #b4b4b7; }
+.axcal-brand { right: 27px; top: 766px; height: 23px; display: flex; align-items: center; gap: 8px; color: #dadadc; }
+.axcal-brand svg { width: 23px; height: 20px; }
+.axcal-brand span { font-size: 22px; line-height: 23px; font-weight: 500; letter-spacing: .01em; }

@@ -1,0 +1,10 @@
+dist/
+.playwright-mcp/
+.DS_Store
+node_modules/
+
+# reference screenshots and brief (not used by the site)
+/pnl.png
+/pnl_calendar.png
+/trading.png
+/task.md
